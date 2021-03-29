@@ -1,7 +1,11 @@
 {
   "name": "automata.js",
   "description": "A library convert regular expression to finite state matchine",
-  "keywords": ["regular", "automata", "fsm"],
+  "keywords": [
+    "regular",
+    "automata",
+    "fsm"
+  ],
   "version": "0.2.1",
   "main": "./index.js",
   "script": {
@@ -15,11 +19,13 @@
     "url": "https://github.com/hokein/automata.js/issues"
   },
   "devDependencies": {
-    "mocha": "1.21.4",
-    "browserify": "5.12.0"
+    "browserify": "^17.0.0",
+    "mocha": "^8.3.2"
   },
-  "licenses": [{
-    "type": "MIT",
-    "url": "http://opensource.org/licenses/mit-license.php"
-  }]
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://opensource.org/licenses/mit-license.php"
+    }
+  ]
 }
