@@ -1,4 +1,4 @@
-require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+require=(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 var DOTSCRIPTHEADER = 'digraph finite_state_machine {\n' + '  rankdir = LR;\n';
 var DOTSCRIPTEND = '}\n';
 
@@ -18,11 +18,15 @@ function escapeCharacter(token) {
   return token;
 }
 
-exports.toDotScript = function(fsm) {
+function node_name(i, alpha) {
+  return alpha ? String.fromCharCode("A".charCodeAt(0) + Number(i)) : i;
+}
+
+exports.toDotScript = function(fsm, alpha) {
   var transitionDotScript = '  node [shape = circle];\n';
   for (var from_id in fsm.transitions) {
     for (var to_id in fsm.transitions[from_id]) {
-    transitionDotScript += '  ' + [from_id] + '->' + to_id + ' [label="' +
+    transitionDotScript += '  ' + node_name(from_id, alpha) + '->' + node_name(to_id, alpha) + ' [label="' +
         escapeCharacter(fsm.transitions[from_id][to_id]) + '"];\n';
     }
   }
@@ -31,13 +35,13 @@ exports.toDotScript = function(fsm) {
   var acceptStatesDotScript = '';
   for (var i = 0; i < fsm.numOfStates; ++i) {
     if (fsm.acceptStates.indexOf(i.toString()) != -1) {
-      acceptStatesDotScript += '  node [shape = doublecircle]; ' + i + ';\n';
+      acceptStatesDotScript += '  node [shape = doublecircle]; ' + node_name(i, alpha) + ';\n';
     }
     if (fsm.initialState == i.toString()) {
-      initialStatesStartDotScript += '  "" -> ' + i + ' [label = "start"];\n';
+      initialStatesStartDotScript += '  "" -> ' + node_name(i, alpha) + ' [label = "start"];\n';
       // accept is higher priority than initial state.
       if (fsm.acceptStates.indexOf(i.toString()) == -1)
-        initialStatesDotScript += '  node [shape = circle]; ' + i + ';\n';
+        initialStatesDotScript += '  node [shape = circle]; ' + node_name(i, alpha) + ';\n';
     }
   }
   return DOTSCRIPTHEADER + initialStatesDotScript + acceptStatesDotScript +
@@ -152,8 +156,55 @@ module.exports.Lexer = Lexer;
 module.exports.EMPTYTOKEN = EMPTYTOKEN;
 module.exports.TOKEN_TYPE = TOKEN_TYPE;
 
+},{}],3:[function(require,module,exports){
+var TIKZHEADER = '\\begin{tikzpicture}\n';
+var TIKZEND = '\\end{tikzpicture}';
+
+function escapeCharacter(token) {
+  switch (token)  {
+    case 'ε':
+      return '\\epsilon';
+  }
+  return token;
+}
+
+function format() {
+  var args = arguments;
+  return args[0].replace(/{(\d+)}/g, function(match, number) {
+    return typeof args[number + 1] != 'undefined'
+      ? args[number + 1]
+      : match
+    ;
+  });
+};
+
+exports.toTikz = function(fsm) {
+  var transitionsTikz = '\\path[->]';
+  for (var from_id in fsm.transitions) {
+    for (var to_id in fsm.transitions[from_id]) {
+      var label = escapeCharacter(fsm.transitions[from_id][to_id]);
+      transitionsTikz += `\n(S_${from_id}) edge [bend left=30] node [above] { $${label}$ } (S_${to_id})`;
+    }
+  }
+  transitionsTikz += ';\n';
+
+  var statesTikz = '';
+  for (var i = 0; i < fsm.numOfStates; ++i) {
+    var previous = i - 1;
+    if (fsm.initialState == i.toString()) {
+      statesTikz += `\\node[state, initial] (S_${i}) {$S_${i}$};\n`
+    } else if (fsm.acceptStates.indexOf(i.toString()) != -1) {
+      statesTikz += `\\node[state, accepting] (S_${i}) [right=of S_${previous}] {$S_${i}$};\n`
+    } else {
+      statesTikz += `\\node[state] (S_${i}) [right=of S_${previous}] {$S_${i}$};\n`
+    }
+  }
+  return TIKZHEADER + statesTikz + transitionsTikz + TIKZEND;
+}
+
 },{}],"regparser":[function(require,module,exports){
 var DotConverter = require('./dot-converter');
+var TikzConverter = require('./tikz-converter');
 var Lexer = require('./lexer').Lexer;
 var EMPTYTOKEN = require('./lexer').EMPTYTOKEN;
 var TOKEN_TYPE = require('./lexer').TOKEN_TYPE;
@@ -348,8 +399,12 @@ function FSM() {
   this.transitions = {};
 };
 
-FSM.prototype.toDotScript = function() {
-  return DotConverter.toDotScript(this);
+FSM.prototype.toDotScript = function(alpha = false) {
+  return DotConverter.toDotScript(this, alpha);
+};
+
+FSM.prototype.toTikz = function() {
+  return TikzConverter.toTikz(this);
 };
 
 FSM.prototype.match = function(text) {
@@ -604,4 +659,4 @@ RegParser.prototype._consume = function(type) {
 module.exports.RegParser = RegParser;
 module.exports.FSM = FSM;
 
-},{"./dot-converter":1,"./lexer":2}]},{},[]);
+},{"./dot-converter":1,"./lexer":2,"./tikz-converter":3}]},{},[]);
