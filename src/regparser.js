@@ -194,8 +194,8 @@ function FSM() {
   this.transitions = {};
 };
 
-FSM.prototype.toDotScript = function() {
-  return DotConverter.toDotScript(this);
+FSM.prototype.toDotScript = function(alpha = false) {
+  return DotConverter.toDotScript(this, alpha);
 };
 
 FSM.prototype.toTikz = function() {

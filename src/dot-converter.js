@@ -17,11 +17,15 @@ function escapeCharacter(token) {
   return token;
 }
 
-exports.toDotScript = function(fsm) {
+function node_name(i, alpha) {
+  return alpha ? String.fromCharCode("A".charCodeAt(0) + Number(i)) : i;
+}
+
+exports.toDotScript = function(fsm, alpha) {
   var transitionDotScript = '  node [shape = circle];\n';
   for (var from_id in fsm.transitions) {
     for (var to_id in fsm.transitions[from_id]) {
-    transitionDotScript += '  ' + [from_id] + '->' + to_id + ' [label="' +
+    transitionDotScript += '  ' + node_name(from_id, alpha) + '->' + node_name(to_id, alpha) + ' [label="' +
         escapeCharacter(fsm.transitions[from_id][to_id]) + '"];\n';
     }
   }
@@ -30,13 +34,13 @@ exports.toDotScript = function(fsm) {
   var acceptStatesDotScript = '';
   for (var i = 0; i < fsm.numOfStates; ++i) {
     if (fsm.acceptStates.indexOf(i.toString()) != -1) {
-      acceptStatesDotScript += '  node [shape = doublecircle]; ' + i + ';\n';
+      acceptStatesDotScript += '  node [shape = doublecircle]; ' + node_name(i, alpha) + ';\n';
     }
     if (fsm.initialState == i.toString()) {
-      initialStatesStartDotScript += '  "" -> ' + i + ' [label = "start"];\n';
+      initialStatesStartDotScript += '  "" -> ' + node_name(i, alpha) + ' [label = "start"];\n';
       // accept is higher priority than initial state.
       if (fsm.acceptStates.indexOf(i.toString()) == -1)
-        initialStatesDotScript += '  node [shape = circle]; ' + i + ';\n';
+        initialStatesDotScript += '  node [shape = circle]; ' + node_name(i, alpha) + ';\n';
     }
   }
   return DOTSCRIPTHEADER + initialStatesDotScript + acceptStatesDotScript +
