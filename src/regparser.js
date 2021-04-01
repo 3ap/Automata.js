@@ -1,4 +1,5 @@
 var DotConverter = require('./dot-converter');
+var TikzConverter = require('./tikz-converter');
 var Lexer = require('./lexer').Lexer;
 var EMPTYTOKEN = require('./lexer').EMPTYTOKEN;
 var TOKEN_TYPE = require('./lexer').TOKEN_TYPE;
@@ -195,6 +196,10 @@ function FSM() {
 
 FSM.prototype.toDotScript = function() {
   return DotConverter.toDotScript(this);
+};
+
+FSM.prototype.toTikz = function() {
+  return TikzConverter.toTikz(this);
 };
 
 FSM.prototype.match = function(text) {
