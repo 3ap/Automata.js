@@ -88,7 +88,7 @@
       parser.reset(input);
       try {
         var dfa = parser.parseToDFA();
-        var result = Viz(dfa.toDotScript(true), 'svg', 'dot');
+        var result = Viz(dfa.toDotScript(true), 'svg', 'neato');
         document.getElementById("repl_results").className = "";
         document.getElementById("repl_results").innerHTML = result;
       } catch(e) {
